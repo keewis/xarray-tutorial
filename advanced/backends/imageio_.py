@@ -118,35 +118,44 @@ class ImageIOBackend(xr.backends.BackendEntrypoint):
 
         return xr.Dataset({'data': var}, coords=coords)
 
-    
-    def write_dataset_gif(self,
-                  dataset: xr.Dataset,
-                  out_filename: str,
-                  variable: str,
-                  time_dim: str,
-                  plot: bool = False):
+
+    def write_dataset_gif(
+        self,
+        dataset: xr.Dataset,
+        out_filename: str,
+        variable: str,
+        time_dim: str,
+        plot: bool = False,
+    ):
         """Writes a xr.Dataset to a GIF. xr.Dataset must have a time dimension greater than 1.
 
         :param dataset: xr.Dataset containing data variables
-        :param out_filename: GIF filename to write out to. 
+        :param out_filename: GIF filename to write out to.
         :param variable: data variable to plot and covert to GIF
         :param time_dim: name of time dimension
         :param plot: when True, writes and plot image first as JPG and create GIF from plots, defaults to False
         """
-     
-        frames_array = np.stack([dataset[variable][x] for x in range(len(dataset[time_dim]))], axis=0)
-        iio.imwrite(out_filename, frames_array, extension='.gif', loop=0, duration=100, background=1)
-        
 
-    def write_jpg_gif(self,
-                  image_names: list,
-                  out_filename: str):
+        frames_array = np.stack(
+            [dataset[variable][x] for x in range(len(dataset[time_dim]))], axis=0
+        )
+        iio.imwrite(
+            out_filename,
+            frames_array,
+            extension=".gif",
+            loop=0,
+            duration=100,
+            background=1,
+        )
 
-        """ Writes a list of images to a GIF.
+    def write_jpg_gif(self, image_names: list, out_filename: str):
+        """Writes a list of images to a GIF.
 
-        :param out_filename: GIF filename to write out to. 
+        :param out_filename: GIF filename to write out to.
         """
         print(image_names)
         frames = np.stack([iio.imread(image) for image in image_names], axis=0)
         print(frames)
-        iio.imwrite(out_filename, frames, extension='.gif', loop=0, duration=100, background=1)
+        iio.imwrite(
+            out_filename, frames, extension=".gif", loop=0, duration=100, background=1
+        )
