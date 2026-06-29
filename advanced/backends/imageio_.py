@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 import imageio.v3 as iio
+import matplotlib.pyplot as plt
 
 if TYPE_CHECKING:
     import os
@@ -126,7 +127,8 @@ class ImageIOBackend(xr.backends.BackendEntrypoint):
         variable: str,
         time_dim: str,
         plot: bool = False,
-    ):
+        plot_outpath: str ='plot_image',
+    ):       
         """Writes a xr.Dataset to a GIF. xr.Dataset must have a time dimension greater than 1.
 
         :param dataset: xr.Dataset containing data variables
@@ -134,19 +136,37 @@ class ImageIOBackend(xr.backends.BackendEntrypoint):
         :param variable: data variable to plot and covert to GIF
         :param time_dim: name of time dimension
         :param plot: when True, writes and plot image first as JPG and create GIF from plots, defaults to False
+        :param plot_outpath: name for plots appended with the index of the time series, defaults to 'plot_image'
         """
+        
+        if plot:
+            img_count = len(dataset[time_dim])
+            jpg_names = []
+            variable_da = dataset[variable]
+            for i in range(img_count):
+                plt.figure()
+                variable_da[i].plot(
+                    x="lon",
+                    y="lat",
+                    vmin=variable_da.min(),
+                    vmax=variable_da.max())
+                jpg_name = f'img_data/{plot_outpath}_{i}.jpg'
+                plt.savefig(jpg_name)
+                jpg_names.append(jpg_name)
+            self.write_jpg_gif(jpg_names, out_filename)
 
-        frames_array = np.stack(
-            [dataset[variable][x] for x in range(len(dataset[time_dim]))], axis=0
-        )
-        iio.imwrite(
-            out_filename,
-            frames_array,
-            extension=".gif",
-            loop=0,
-            duration=100,
-            background=1,
-        )
+        else:
+            frames_array = np.stack(
+                [dataset[variable][x] for x in range(len(dataset[time_dim]))], axis=0
+                )
+            iio.imwrite(
+                out_filename,
+                frames_array,
+                extension=".gif",
+                loop=0,
+                duration=100,
+                background=1,
+            )
 
     def write_jpg_gif(self, image_names: list, out_filename: str):
         """Writes a list of images to a GIF.
